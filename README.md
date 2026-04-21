@@ -53,24 +53,33 @@
 
 ### 2.1 Общая архитектура
 
+## Архитектура системы
+
+Система A/B Test Assistant построена как агентский конвейер, состоящий из четырёх ключевых компонентов:
+
+| Компонент | Назначение | Технологии |
+|-----------|------------|------------|
+| **Streamlit UI** | Пользовательский интерфейс в виде чата. Отправляет запросы в n8n и отображает ответы ассистента. | Streamlit, Requests |
+| **n8n Workflow** | Оркестратор агента. Принимает запрос, вызывает AI Agent с доступом к MCP-инструментам и возвращает ответ. | n8n, AI Agent Node, MCP Client Node |
+| **MCP Server** | Предоставляет статистические инструменты для агента (расчёт выборки, анализ результатов и т.д.). Логирует вызовы в Langfuse. | Python, FastMCP, SciPy, Langfuse SDK |
+| **Langfuse** | Платформа observability. Хранит трейсы, метрики и оценки качества для мониторинга и анализа. | Langfuse (Docker) |
+
+### Диаграмма взаимодействия
+
 ```mermaid
 graph TD
-    A[Streamlit UI] --> B{n8n Workflow};
-    B --> C[MCP Server];
-    C --> D[LLM (GPT-4o)];
-    B --> E[Tool 1: Hypothesis Generator];
-    B --> F[Tool 2: Sample Size Calculator];
-    B --> G[Tool 3: Results Interpreter];
-    B --> H[Tool 4: Statistical Test];
-    subgraph Observability
-        I[Langfuse]
-    end
-    B -.-> I;
-    C -.-> I;
+    A[Streamlit UI] -->|HTTP POST /webhook| B{n8n Workflow};
+    B --> C[MCP Client Node];
+    C -->|MCP Protocol| D[MCP Server];
+    D --> E[LLM GPT-4o];
+    B --> F[AI Agent Node];
+    F --> G[Инструменты:<br/>Hypothesis<br/>Sample Size<br/>Analyze<br/>Check Sufficiency];
+    D -.->|Трейсы и оценки| H[Langfuse];
+    B -.->|Ответ агента| A;
     style A fill:#f9f,stroke:#333,stroke-width:2px
     style B fill:#ccf,stroke:#333,stroke-width:2px
-    style C fill:#9cf,stroke:#333,stroke-width:2px
-    style D fill:#9f9,stroke:#333,stroke-width:2px
+    style D fill:#9cf,stroke:#333,stroke-width:2px
+    style H fill:#9f9,stroke:#333,stroke-width:2px
 ```
 
 ---
