@@ -1,0 +1,118 @@
+{
+  "name": "A/B Test Assistant Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "abtest-assistant",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "3fa3e3f4-9b7c-4c4d-8d1e-2e5e6f7a8b9c",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [250, 300],
+      "webhookId": "1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d"
+    },
+    {
+      "parameters": {
+        "prompt": "={{ $json.message }}",
+        "options": {
+          "systemMessage": "Ты — AI-ассистент для проведения A/B-тестов. Твоя задача — помогать пользователям формулировать статистические гипотезы, рассчитывать размер выборки и интерпретировать результаты тестов. Используй предоставленные тебе инструменты для точных расчетов. Всегда объясняй свои выводы простым языком."
+        }
+      },
+      "id": "2fb4f4g5-0c8d-5d5e-9e2f-3f6f7g8h9i0j",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "mcpServerUrl": "http://localhost:8080/mcp",
+        "tools": {
+          "tool": [
+            {
+              "name": "formulate_hypothesis",
+              "description": "Формулирует строгую статистическую гипотезу"
+            },
+            {
+              "name": "calculate_sample_size",
+              "description": "Рассчитывает необходимый размер выборки для A/B-теста"
+            },
+            {
+              "name": "analyze_results",
+              "description": "Анализирует результаты A/B-теста и выдает интерпретацию"
+            },
+            {
+              "name": "check_sample_size_sufficiency",
+              "description": "Проверяет, достаточен ли фактически набранный размер выборки"
+            }
+          ]
+        }
+      },
+      "id": "4gc5g5h6-1d9e-6e6f-0f3g-4g7h8i9j0k1l",
+      "name": "MCP Client",
+      "type": "@n8n/n8n-nodes-langchain.toolMCPClient",
+      "typeVersion": 1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Обработка ответа от AI Agent перед отправкой пользователю\nconst inputData = $input.first().json;\nconst output = {\n  output: inputData.output || \"Извините, не удалось обработать ваш запрос.\"\n};\n\nreturn output;"
+      },
+      "id": "6ie7i7j8-3f1g-8g8h-2h5i-6i9j0k1l2m3n",
+      "name": "Format Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "response": {
+          "response": "={{ $json }}"
+        }
+      },
+      "id": "7jf8j8k9-4g2h-9h9i-3i6j-7j0k1l2m3n4o",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1050, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Response": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
