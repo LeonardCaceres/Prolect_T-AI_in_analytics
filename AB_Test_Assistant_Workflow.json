@@ -1,5 +1,5 @@
 {
-  "name": "A/B Test Assistant Workflow",
+  "name": "A/B Test Assistant Workflow (DeepSeek)",
   "nodes": [
     {
       "parameters": {
@@ -16,16 +16,22 @@
     },
     {
       "parameters": {
-        "prompt": "={{ $json.message }}",
+        "text": "={{ $json.message }}",
         "options": {
           "systemMessage": "Ты — AI-ассистент для проведения A/B-тестов. Твоя задача — помогать пользователям формулировать статистические гипотезы, рассчитывать размер выборки и интерпретировать результаты тестов. Используй предоставленные тебе инструменты для точных расчетов. Всегда объясняй свои выводы простым языком."
         }
       },
       "id": "2fb4f4g5-0c8d-5d5e-9e2f-3f6f7g8h9i0j",
-      "name": "AI Agent",
-      "type": "@n8n/n8n-nodes-langchain.agent",
+      "name": "Basic LLM Chain",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1,
-      "position": [450, 300]
+      "position": [450, 300],
+      "credentials": {
+        "openAiApi": {
+          "id": "1",
+          "name": "DeepSeek Account"
+        }
+      }
     },
     {
       "parameters": {
@@ -59,7 +65,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Обработка ответа от AI Agent перед отправкой пользователю\nconst inputData = $input.first().json;\nconst output = {\n  output: inputData.output || \"Извините, не удалось обработать ваш запрос.\"\n};\n\nreturn output;"
+        "jsCode": "// Обработка ответа от AI Agent перед отправкой пользователю\nconst inputData = $input.first().json;\nconst output = {\n  output: inputData.text || \"Извините, не удалось обработать ваш запрос.\"\n};\n\nreturn output;"
       },
       "id": "6ie7i7j8-3f1g-8g8h-2h5i-6i9j0k1l2m3n",
       "name": "Format Response",
@@ -85,14 +91,14 @@
       "main": [
         [
           {
-            "node": "AI Agent",
+            "node": "Basic LLM Chain",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "AI Agent": {
+    "Basic LLM Chain": {
       "main": [
         [
           {
