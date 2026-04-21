@@ -2,9 +2,13 @@
 import streamlit as st
 import requests
 import json
+import os
 
 # Конфигурация n8n Webhook
-N8N_WEBHOOK_URL = "http://localhost:5678/webhook/abtest-assistant"  # Замените на ваш URL вебхука
+N8N_WEBHOOK_URL = "http://localhost:5678/webhook/abtest-assistant"
+
+# Загружаем название модели из переменных окружения или используем значение по умолчанию
+DEEPSEEK_MODEL = os.getenv("DEEPSEEK_MODEL", "deepseek-chat")
 
 st.set_page_config(page_title="A/B Test Assistant", layout="wide")
 st.title("🧪 Ассистент для проведения A/B тестов")
@@ -29,9 +33,14 @@ if prompt := st.chat_input("Опишите вашу идею для A/B тест
     with st.chat_message("assistant"):
         with st.spinner("Ассистент думает..."):
             try:
+                # Передаем в n8n сообщение, идентификатор сессии и название модели DeepSeek
                 response = requests.post(
                     N8N_WEBHOOK_URL,
-                    json={"message": prompt, "session_id": "streamlit_ui"},
+                    json={
+                        "message": prompt,
+                        "session_id": "streamlit_ui",
+                        "model": DEEPSEEK_MODEL
+                    },
                     timeout=60
                 )
                 response.raise_for_status()
